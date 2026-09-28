@@ -314,7 +314,7 @@ Status: `Implemented`
 
 compliance_core depends on nothing above core (`tap_grid`/`tap`). Consumers depend
 **downward**: `fedramp_20x_ksi`, `roscale`, and `samsite` declare
-`tap-plugin-compliance-core` in `pyproject.toml` and list `compliance_core` in
+`compliance-core-tap` in `pyproject.toml` and list `compliance_core` in
 `depends_on`. The AST import-graph guard (`tap/plugin_deps.py`) enforces that any
 `from tap_plugin.compliance_core…` import is declared.
 

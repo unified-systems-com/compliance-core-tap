@@ -1,10 +1,10 @@
 # TAP compliance_core plugin — package-mode distribution (2026-07-08).
-# Identity (conformance gate): slug "compliance_core" == dist "tap-plugin-compliance-core" ==
+# Identity (conformance gate): slug "compliance_core" == dist "compliance-core-tap" ==
 # namespace "tap_plugin.compliance_core" == entry-point key. NOT a uv.workspace member.
 # Regime-agnostic compliance vocabulary substrate; fedramp_20x_ksi/roscale/samsite depend
 # on it downward. Spec: plugins/compliance_core/specs/spec-compliance-core-v0.md.
 [project]
-name = "tap-plugin-compliance-core"
+name = "compliance-core-tap"
 description = "TAP Compliance Core plugin — regime-agnostic compliance vocabulary (artifacts, context, evidence, findings, exceptions, boundaries)."
 requires-python = ">=3.14"
 dynamic = ["version"]
