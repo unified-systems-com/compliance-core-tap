@@ -847,14 +847,14 @@ A stat-card panel binds one Search and draws one card per row, so a panel showin
 | --- | --- |
 | `summaries` | Required. A non-empty array of `{key, label, summary_search_id}`. `key` matches `^[a-z][a-z0-9_]*$` and is unique in the array; `label` is optional, a non-empty string defaulting to `key`; `summary_search_id` is as for `dimension-mapping-totals`. |
 
-It returns one row per summary, in array order: `key`, `label`, `groups`, `percent_overall`, `denominator`, `mapped`, `unmapped`, `mapped_incorrectly`, `no_rule` and `percent_pooled`, and no other field. `warnings` is the summaries' own warnings, concatenated in array order. An empty or non-array `summaries`, a bad or repeated `key`, a bad `label`, and any `summary_search_id` refused by `dimension-mapping-totals` are refused with a `ValueError` naming the input.
+It returns one row per summary, in array order: `key`, `label`, `groups`, `percent_overall`, `denominator`, `mapped`, `unmapped`, `mapped_incorrectly`, `no_rule`, `percent_pooled` and `percent_text` (`percent_overall` to one decimal with a `%`, null when there is none), and no other field. `warnings` is the summaries' own warnings, concatenated in array order. An empty or non-array `summaries`, a bad or repeated `key`, a bad `label`, and any `summary_search_id` refused by `dimension-mapping-totals` are refused with a `ValueError` naming the input.
 
 #### Acceptance Criteria
 
 | ACID | Title | Status | Description | Notes |
 | --- | --- | :---: | --- | --- |
 | req-compliance-core-dimension-mapping-totals-set-1 | Registered From The Manifest | Implemented | The runner is declared in `[searches]` and registered in the search runner registry at plugin load. | |
-| req-compliance-core-dimension-mapping-totals-set-2 | One Row Per Summary | Implemented | The runner returns one row per summary in array order, each with `key`, `label` (default the key) and the eight totals fields, and those fields equal what `dimension-mapping-totals` returns for that summary. | |
+| req-compliance-core-dimension-mapping-totals-set-2 | One Row Per Summary | Implemented | The runner returns one row per summary in array order, each with `key`, `label` (default the key), the eight totals fields and `percent_text` (`percent_overall` to one decimal with a `%`, null when there is none), and the totals fields equal what `dimension-mapping-totals` returns for that summary. | |
 | req-compliance-core-dimension-mapping-totals-set-3 | Warnings Merged | Implemented | `warnings` is each summary's own warnings, concatenated in array order. | |
 | req-compliance-core-dimension-mapping-totals-set-4 | Bad Input Refused | Implemented | An empty or non-array `summaries`, a `key` not matching `^[a-z][a-z0-9_]*$`, a repeated `key`, a `label` that is not a non-empty string, and a `summary_search_id` that is not a dimension-mapping-summary search are refused with a `ValueError`. | |
 

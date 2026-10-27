@@ -93,7 +93,8 @@ def _summaries(raw: Any) -> list[tuple[str, str, Any]]:
 def dimension_mapping_totals_set(
     search: Search, inputs: dict[str, Any], *, db_alias: str, layer: str = "full"
 ) -> dict[str, Any]:
-    """One row per summary, in array order: `key`, `label`, then the same fields `dimension-mapping-totals` returns.
+    """One row per summary, in array order: `key`, `label`, then the same fields `dimension-mapping-totals` returns, then
+    `percent_text`, `percent_overall` to one decimal with a `%` (`None` when there is none), for a card that shows it as it is.
     `warnings` are the summaries' own, concatenated. Input `summaries`: a non-empty array of `{key, label?, summary_search_id}`
     (`label` defaults to `key`).
 
@@ -105,6 +106,8 @@ def dimension_mapping_totals_set(
     warnings: list[Any] = []
     for key, label, summary in searches:
         out = dimension_mapping_summary(summary, _defaults(summary), db_alias=db_alias, layer=layer)
-        rows.append({"key": key, "label": label, **totals_from_rows(out["rows"])})
+        totals = totals_from_rows(out["rows"])
+        percent = totals["percent_overall"]
+        rows.append({"key": key, "label": label, **totals, "percent_text": None if percent is None else f"{round(percent, 1)}%"})
         warnings.extend(out["warnings"])
     return {"nodes": [], "edges": [], "rows": rows, "info": {"row_count": len(rows)}, "warnings": warnings}

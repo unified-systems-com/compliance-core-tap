@@ -299,7 +299,8 @@ class TestRunnerSet:
         assert out["nodes"] == [] and out["edges"] == [] and out["info"] == {"row_count": 2}
         assert [(r["key"], r["label"]) for r in out["rows"]] == [("resp", "Responsibility"), ("data_class", "data_class")]
         for row, search in zip(out["rows"], (one, two), strict=True):
-            assert set(row) == {"key", "label", *FIELDS}
+            assert set(row) == {"key", "label", "percent_text", *FIELDS}
+            assert row["percent_text"] == f"{round(row['percent_overall'], 1)}%"
             single = run(search)["rows"][0]
             assert {f: row[f] for f in FIELDS} == {f: single[f] for f in FIELDS}
         assert out["rows"][0]["denominator"] != out["rows"][1]["denominator"]
