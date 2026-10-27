@@ -181,7 +181,7 @@ layer.
 | req-compliance-core-dimension-coverage | [Dimension Coverage Search](#dimension-coverage-search) | Implemented | One generic `module` Search runner, `dimension-coverage`, counts the entities carrying each value of a dimension key, broken down by entity type, which Gryphon cannot group. |
 | req-compliance-core-dimension-mapping | [Dimension Mapping Searches](#dimension-mapping-searches) | Implemented | Two generic `module` Search runners, `dimension-mapping-summary` and `dimension-mapping-entities`, compare what entities carry against a mapping held in the Search's inputs and report each live entity of a mapped type as mapped, unmapped or mapped incorrectly. A mapping row may name a group of entity types, a key may accept any present value, and the summary may report one row per value of a grouping dimension (the inventory category). |
 | req-compliance-core-dimension-mapping-totals | [Dimension Mapping Totals](#dimension-mapping-totals) | Implemented | `dimension-mapping-totals`: one row of live totals (the plain-average coverage, the pooled counts) for a grouped summary Search, read from that Search's own inputs, so a card shows the figures with no second copy of the mapping. |
-| req-compliance-core-dimension-mapping-totals-set | [Dimension Mapping Totals Set](#dimension-mapping-totals-set) | Implemented | `dimension-mapping-totals-set`: one row holding the totals of several summary Searches, each field prefixed with the summary's key, so one stat card shows several coverage figures from one Search. |
+| req-compliance-core-dimension-mapping-totals-set | [Dimension Mapping Totals Set](#dimension-mapping-totals-set) | Implemented | `dimension-mapping-totals-set`: one row per summary Search, each carrying its key, a label and the totals, so one stat-card panel shows several coverages side by side from one Search. |
 | req-compliance-core-finding-detection | [Finding Detection Time](#finding-detection-time) | Implemented | `compliance_finding.first_detected_at`: when the producer first detected the finding; null until a source says; not identity. |
 | req-compliance-core-exception | [Exception Modeling](#exception-modeling) | Implemented | `compliance_exception` gains `kind`, `justification`, `approver`, `granted_at`, `review_by`, `expires_at` and `verify_within_hours`, and declares its instances as contained. |
 | req-compliance-core-exception-instance | [Exception Instance Modeling](#exception-instance-modeling) | Implemented | `compliance_exception_instance`: one exception's application to one vulnerability within one declared scope; carries the last check's `outcome` and `verified_at`. |
@@ -837,7 +837,7 @@ RID: `req-compliance-core-dimension-mapping-totals-set`
 
 Status: `Implemented`
 
-A stat-card panel binds one Search and reads one row, so a card showing two coverages (for example Responsibility and Data Classification) needs both in one row. `dimension-mapping-totals-set` returns that row. It adds no arithmetic: each summary's figures are exactly what `dimension-mapping-totals` returns for it (`coverage.totals_from_rows`).
+A stat-card panel binds one Search and draws one card per row, so a panel showing two coverages side by side (for example Responsibility and Data Classification) needs one row per coverage. `dimension-mapping-totals-set` returns those rows. It adds no arithmetic: each summary's figures are exactly what `dimension-mapping-totals` returns for it (`coverage.totals_from_rows`).
 
 #### Implementation
 
@@ -845,18 +845,18 @@ A stat-card panel binds one Search and reads one row, so a card showing two cove
 
 | input | meaning |
 | --- | --- |
-| `summaries` | Required. A non-empty array of `{key, summary_search_id}`. `key` matches `^[a-z][a-z0-9_]*$` and is unique in the array; `summary_search_id` is as for `dimension-mapping-totals`. |
+| `summaries` | Required. A non-empty array of `{key, label, summary_search_id}`. `key` matches `^[a-z][a-z0-9_]*$` and is unique in the array; `label` is optional, a non-empty string defaulting to `key`; `summary_search_id` is as for `dimension-mapping-totals`. |
 
-It returns exactly one row: for each summary, `<key>_groups`, `<key>_percent_overall`, `<key>_denominator`, `<key>_mapped`, `<key>_unmapped`, `<key>_mapped_incorrectly`, `<key>_no_rule` and `<key>_percent_pooled`, and no other field. `warnings` is the summaries' own warnings, concatenated in array order. An empty or non-array `summaries`, a bad or repeated `key`, and any `summary_search_id` refused by `dimension-mapping-totals` are refused with a `ValueError` naming the input.
+It returns one row per summary, in array order: `key`, `label`, `groups`, `percent_overall`, `denominator`, `mapped`, `unmapped`, `mapped_incorrectly`, `no_rule` and `percent_pooled`, and no other field. `warnings` is the summaries' own warnings, concatenated in array order. An empty or non-array `summaries`, a bad or repeated `key`, a bad `label`, and any `summary_search_id` refused by `dimension-mapping-totals` are refused with a `ValueError` naming the input.
 
 #### Acceptance Criteria
 
 | ACID | Title | Status | Description | Notes |
 | --- | --- | :---: | --- | --- |
 | req-compliance-core-dimension-mapping-totals-set-1 | Registered From The Manifest | Implemented | The runner is declared in `[searches]` and registered in the search runner registry at plugin load. | |
-| req-compliance-core-dimension-mapping-totals-set-2 | One Prefixed Row | Implemented | The runner returns exactly one row whose fields are the eight totals fields per summary, each prefixed `<key>_`, and each equals what `dimension-mapping-totals` returns for that summary. | |
+| req-compliance-core-dimension-mapping-totals-set-2 | One Row Per Summary | Implemented | The runner returns one row per summary in array order, each with `key`, `label` (default the key) and the eight totals fields, and those fields equal what `dimension-mapping-totals` returns for that summary. | |
 | req-compliance-core-dimension-mapping-totals-set-3 | Warnings Merged | Implemented | `warnings` is each summary's own warnings, concatenated in array order. | |
-| req-compliance-core-dimension-mapping-totals-set-4 | Bad Input Refused | Implemented | An empty or non-array `summaries`, a `key` not matching `^[a-z][a-z0-9_]*$`, a repeated `key`, and a `summary_search_id` that is not a dimension-mapping-summary search are refused with a `ValueError`. | |
+| req-compliance-core-dimension-mapping-totals-set-4 | Bad Input Refused | Implemented | An empty or non-array `summaries`, a `key` not matching `^[a-z][a-z0-9_]*$`, a repeated `key`, a `label` that is not a non-empty string, and a `summary_search_id` that is not a dimension-mapping-summary search are refused with a `ValueError`. | |
 
 ### Finding Detection Time
 ----

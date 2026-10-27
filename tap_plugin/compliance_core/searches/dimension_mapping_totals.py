@@ -71,11 +71,11 @@ def dimension_mapping_totals(
     return {"nodes": [], "edges": [], "rows": [row], "info": {"row_count": 1}, "warnings": out["warnings"]}
 
 
-def _summaries(raw: Any) -> list[tuple[str, Any]]:
+def _summaries(raw: Any) -> list[tuple[str, str, Any]]:
     if not isinstance(raw, list) or not raw:
         raise ValueError("summaries must be a non-empty array")
     seen: set[str] = set()
-    out: list[tuple[str, Any]] = []
+    out: list[tuple[str, str, Any]] = []
     for item in raw:
         key = item.get("key") if isinstance(item, dict) else None
         if not isinstance(key, str) or not _KEY.fullmatch(key):
@@ -83,24 +83,28 @@ def _summaries(raw: Any) -> list[tuple[str, Any]]:
         if key in seen:
             raise ValueError(f"summaries key {key} is repeated")
         seen.add(key)
-        out.append((key, item.get("summary_search_id")))
+        label = item.get("label", key)
+        if not isinstance(label, str) or not label:
+            raise ValueError(f"summaries label for {key} must be a non-empty string")
+        out.append((key, label, item.get("summary_search_id")))
     return out
 
 
 def dimension_mapping_totals_set(
     search: Search, inputs: dict[str, Any], *, db_alias: str, layer: str = "full"
 ) -> dict[str, Any]:
-    """Exactly one row holding several summaries' totals, each field prefixed `<key>_`. `warnings` are the summaries' own,
-    concatenated. Input `summaries`: a non-empty array of `{key, summary_search_id}`.
+    """One row per summary, in array order: `key`, `label`, then the same fields `dimension-mapping-totals` returns.
+    `warnings` are the summaries' own, concatenated. Input `summaries`: a non-empty array of `{key, label?, summary_search_id}`
+    (`label` defaults to `key`).
 
     req-compliance-core-dimension-mapping-totals-set
     """
-    pairs = _summaries(inputs.get("summaries"))
-    searches = [(key, _summary_search(sid, db_alias=db_alias)) for key, sid in pairs]  # validate all before running any
-    row: dict[str, Any] = {}
+    triples = _summaries(inputs.get("summaries"))
+    searches = [(key, label, _summary_search(sid, db_alias=db_alias)) for key, label, sid in triples]  # validate all first
+    rows: list[dict[str, Any]] = []
     warnings: list[Any] = []
-    for key, summary in searches:
+    for key, label, summary in searches:
         out = dimension_mapping_summary(summary, _defaults(summary), db_alias=db_alias, layer=layer)
-        row.update({f"{key}_{field}": value for field, value in totals_from_rows(out["rows"]).items()})
+        rows.append({"key": key, "label": label, **totals_from_rows(out["rows"])})
         warnings.extend(out["warnings"])
-    return {"nodes": [], "edges": [], "rows": [row], "info": {"row_count": 1}, "warnings": warnings}
+    return {"nodes": [], "edges": [], "rows": rows, "info": {"row_count": len(rows)}, "warnings": warnings}

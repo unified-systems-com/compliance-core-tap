@@ -280,7 +280,7 @@ class TestRunnerSet:
         assert get_search_runner(key) is dimension_mapping_totals_set
 
     @pytest.mark.spec("req-compliance-core-dimension-mapping-totals-set-2")
-    def test_two_summaries_give_one_row_equal_to_each_single_runner_prefixed(self) -> None:
+    def test_two_summaries_give_one_row_each_equal_to_the_single_runner(self) -> None:
         _build()
         one = _summary_search("one")
         two = _summary_search(
@@ -290,16 +290,19 @@ class TestRunnerSet:
             exclude_groups=["apps"],
         )
         out = run_set(
-            [{"key": "resp", "summary_search_id": str(one.pk)}, {"key": "data_class", "summary_search_id": str(two.pk)}]
+            [
+                {"key": "resp", "label": "Responsibility", "summary_search_id": str(one.pk)},
+                {"key": "data_class", "summary_search_id": str(two.pk)},
+            ]
         )
         json.dumps(out)
-        (row,) = out["rows"]
-        assert out["nodes"] == [] and out["edges"] == [] and out["info"] == {"row_count": 1}
-        assert set(row) == {f"{k}_{f}" for k in ("resp", "data_class") for f in FIELDS}
-        for key, search in (("resp", one), ("data_class", two)):
+        assert out["nodes"] == [] and out["edges"] == [] and out["info"] == {"row_count": 2}
+        assert [(r["key"], r["label"]) for r in out["rows"]] == [("resp", "Responsibility"), ("data_class", "data_class")]
+        for row, search in zip(out["rows"], (one, two), strict=True):
+            assert set(row) == {"key", "label", *FIELDS}
             single = run(search)["rows"][0]
-            assert {f: row[f"{key}_{f}"] for f in FIELDS} == {f: single[f] for f in FIELDS}
-        assert row["resp_denominator"] != row["data_class_denominator"]
+            assert {f: row[f] for f in FIELDS} == {f: single[f] for f in FIELDS}
+        assert out["rows"][0]["denominator"] != out["rows"][1]["denominator"]
 
     @pytest.mark.spec("req-compliance-core-dimension-mapping-totals-set-3")
     def test_warnings_are_the_summaries_own_concatenated(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -329,6 +332,8 @@ class TestRunnerSet:
             [{"key": "1a", "summary_search_id": ok}],
             [{"key": "a-b", "summary_search_id": ok}],
             [{"key": "", "summary_search_id": ok}],
+            [{"key": "a", "label": "", "summary_search_id": ok}],
+            [{"key": "a", "label": 3, "summary_search_id": ok}],
             [{"summary_search_id": ok}],
             ["a"],
             [{"key": "a", "summary_search_id": str(node.pk)}],
