@@ -3,8 +3,8 @@
 `first_detected_at` is when the producer first detected a finding, as its own record gives it.
 It is null until a source says (never defaulted to the time this grid first saw the finding), it is
 checked as a date-time, it is not part of the finding's identity, and a node under an existing key
-changes only the fields it carries, so a re-send that omits it keeps the stored value and only an
-explicit null clears it.
+changes only the fields it carries on a core with the keep-absent upsert (tap#1128), so a re-send that
+omits it keeps the stored value and only an explicit null clears it; an older core replaces the row.
 """
 
 from __future__ import annotations
@@ -18,7 +18,12 @@ import tap_plugin.compliance_core.models as compliance  # noqa: F401 - trigger m
 from tap_grid.grift import grift_import
 from tap_grid.models import Entity
 from tap_grid.registry import get_model_class
+from tap_grid.service_types import WriteOperation
 from tap_grid.services import create_node
+
+# A core release that carries the keep-absent upsert (tap#1128) leaves an omitted field alone; an older
+# release replaces the whole row. The plugin's CI runs against both, so the test follows the core's capability.
+KEEPS_ABSENT = "absent" in WriteOperation.__dataclass_fields__
 
 FINDING_TYPE = "compliance_core__compliance_finding"
 FINDING = {"source": "github_core", "source_key": "unified-systems-com/tap#code_scanning#7", "name": "CVE-2026-1"}
@@ -122,15 +127,17 @@ class TestFirstDetectedAt:
     def test_a_resend_without_it_keeps_the_value(self) -> None:
         """req-compliance-core-finding-detection-5: pins the platform behaviour the producer duty rests on.
 
-        A GRIFT node under an existing key changes only the fields it carries (tap#1128), so a producer
-        that re-sends this finding and leaves the field out keeps it. If the platform ever goes back to
-        replacing the whole row, this test fails and the producer duty to resend returns.
+        On a core that carries the keep-absent upsert (tap#1128) a GRIFT node under an existing key changes
+        only the fields it carries, so a producer that re-sends this finding and leaves the field out keeps
+        it. On an older core the row is replaced and the field goes back to null, which is why the producer
+        should still send it. If a core with the capability ever goes back to replacing, this test fails.
         """
         model = get_model_class(FINDING_TYPE)
         assert grift_import(_doc({**FINDING, "first_detected_at": "2026-09-25T12:45:55Z"})).success
         assert grift_import(_doc(dict(FINDING))).success
         assert model.objects.live().count() == 1
-        assert model.objects.live().get().first_detected_at.isoformat() == "2026-09-25T12:45:55+00:00"
+        kept = model.objects.live().get().first_detected_at
+        assert (kept.isoformat() if kept else None) == ("2026-09-25T12:45:55+00:00" if KEEPS_ABSENT else None)
 
     def test_an_explicit_null_clears_it(self) -> None:
         """req-compliance-core-finding-detection-5: only a null the producer sends clears the field."""
