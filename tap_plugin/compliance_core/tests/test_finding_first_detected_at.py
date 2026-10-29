@@ -2,8 +2,9 @@
 
 `first_detected_at` is when the producer first detected a finding, as its own record gives it.
 It is null until a source says (never defaulted to the time this grid first saw the finding), it is
-checked as a date-time, it is not part of the finding's identity, and, because a node under an
-existing key replaces the row, a producer that re-sends a finding has to send it again.
+checked as a date-time, it is not part of the finding's identity, and a node under an existing key
+changes only the fields it carries, so a re-send that omits it keeps the stored value and only an
+explicit null clears it.
 """
 
 from __future__ import annotations
@@ -112,21 +113,28 @@ class TestFirstDetectedAt:
         model = get_model_class(FINDING_TYPE)
         assert grift_import(_doc({**FINDING, "first_detected_at": "2026-09-20T08:00:00Z"})).success
         assert grift_import(_doc({**FINDING, "first_detected_at": "2026-09-25T12:45:55Z"})).success
-        assert grift_import(_doc(dict(FINDING))).success
+        assert grift_import(_doc({**FINDING, "first_detected_at": None})).success
         row = model.objects.live().get()
         assert row.first_detected_at is None
         recorded = {h.first_detected_at.isoformat() for h in row.history.all() if h.first_detected_at is not None}
         assert recorded == {"2026-09-20T08:00:00+00:00", "2026-09-25T12:45:55+00:00"}
 
-    def test_a_resend_without_it_goes_back_to_unobserved(self) -> None:
+    def test_a_resend_without_it_keeps_the_value(self) -> None:
         """req-compliance-core-finding-detection-5: pins the platform behaviour the producer duty rests on.
 
-        A GRIFT node under an existing key replaces the row (observed 2026-10-19 on another type), so a
-        producer that re-sends this finding and leaves the field out loses it. If the platform ever merges
-        instead, this test fails and the duty can be relaxed.
+        A GRIFT node under an existing key changes only the fields it carries (tap#1128), so a producer
+        that re-sends this finding and leaves the field out keeps it. If the platform ever goes back to
+        replacing the whole row, this test fails and the producer duty to resend returns.
         """
         model = get_model_class(FINDING_TYPE)
         assert grift_import(_doc({**FINDING, "first_detected_at": "2026-09-25T12:45:55Z"})).success
         assert grift_import(_doc(dict(FINDING))).success
         assert model.objects.live().count() == 1
+        assert model.objects.live().get().first_detected_at.isoformat() == "2026-09-25T12:45:55+00:00"
+
+    def test_an_explicit_null_clears_it(self) -> None:
+        """req-compliance-core-finding-detection-5: only a null the producer sends clears the field."""
+        model = get_model_class(FINDING_TYPE)
+        assert grift_import(_doc({**FINDING, "first_detected_at": "2026-09-25T12:45:55Z"})).success
+        assert grift_import(_doc({**FINDING, "first_detected_at": None})).success
         assert model.objects.live().get().first_detected_at is None
