@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "grift_version": "0"
+  },
+  "_reserved": {},
+  "batches": [
+    {
+      "batch_entity": {
+        "entity_id": "01a1d10a-e61f-74cd-b920-bd411e40b3eb",
+        "entity_type": "batch",
+        "name": "Compliance core dimensions v0.1.0",
+        "dimensions": {}
+      },
+      "batch_node": {
+        "source": "plugins.compliance_core",
+        "name": "Compliance core dimensions v0.1.0",
+        "description": "Dimension nodes for every dimension key the compliance_core plugin declares, so each key has a declared node before the dimension map moves to keying by node id (tap#708, tap#711)."
+      },
+      "nodes": [
+        {
+          "entity": {
+            "entity_id": "01a1d10a-e61f-74cd-b920-bd407c80e766",
+            "entity_type": "dimension",
+            "name": "compliance",
+            "dimensions": {
+              "tap.meta": "dimension"
+            }
+          },
+          "node": {
+            "name": "compliance",
+            "description": "Which compliance concern an entity belongs to: boundary, evidence, finding, exception, scan run, scanner, vulnerability and the rest of the compliance-core vocabulary. Owned by compliance_core and also stamped by plugins that land compliance records (fedramp_20x_ksi, grype, samsite). An undotted key, kept under its current name (aws-build Q50c, 2026-11-12)."
+          }
+        }
+      ],
+      "edges": []
+    }
+  ]
+}
