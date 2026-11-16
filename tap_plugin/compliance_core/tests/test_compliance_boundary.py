@@ -11,6 +11,7 @@ from tap_plugin.compliance_core.models import ComplianceBoundary
 from tap_grid.caller_context import CallerContext
 from tap_grid.models import Edge, Entity
 from tap_grid.services import WriteOperation, write_batch
+from tap_plugin.compliance_core.tests.conftest import dimension_view
 
 
 @pytest.fixture
@@ -60,7 +61,7 @@ class TestBoundaryModel:
     def test_default_dimensions_applied(self, ctx):
         bid = _make_boundary(ctx)
         entity = Entity.objects.get(pk=bid)
-        assert entity.dimensions.get("compliance") == "boundary"
+        assert dimension_view(entity).get("compliance") == "boundary"
 
     def test_entity_name_synced_from_get_name(self, ctx):
         """req-grid-node-display: Entity.name is projected from get_name()."""
@@ -114,7 +115,7 @@ class TestScopedToBoundaryEdge:
         result = write_batch([op], caller_context=ctx)
         assert result.results[0].success
         edge = Edge.objects.get(entity_id=result.results[0].entity_id)
-        assert edge.entity.dimensions.get("compliance") == "boundary"
+        assert dimension_view(edge.entity).get("compliance") == "boundary"
 
 
 class TestBoundaryDisplay:

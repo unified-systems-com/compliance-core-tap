@@ -654,6 +654,8 @@ Status: `Implemented`
 
 **Gryphon has no labelless aggregate grouped by entity type and by dimension value.** "How many entities carry each value of this dimension, and of what types" is a count over every node regardless of type, grouped by `entity_type` and by the value of one dimension key. Gryphon cannot write it: a MATCH needs a node label, and a count grouped by the entity type itself or by a dimension value taken from a Search input is not supported. A `module` Search runner computes it with Django ORM aggregation under the read rules Gryphon applies (`req-grid-search-module`; George's ruling to build a module runner rather than the Gryphon capability), in `tap_plugin/compliance_core/searches/dimension_coverage.py`, registered in the manifest `[searches]` table and stored as `tap_plugin.compliance_core.searches.dimension_coverage:dimension-coverage`. A Search that uses it should say in its description that Gryphon lacks this capability (a labelless aggregate grouped by entity type and by dimension value).
 
+The dimension Search runners (this one and the mapping runners below) speak dimension names and read an entity's stored `dimensions` map only through `tap_plugin/compliance_core/searches/stored_dimensions.py`. A grid from tap 0.3.4 or earlier stores the map as `{name: value}`; a later one keys it by the Dimension node's id and wraps each value (unified-systems-com/tap#711), and there the module asks `tap_grid.dimension_names` for the storage key and the name view. On such a grid a key that no seed declares can be on no row, so a runner given one answers with no entities rather than an error.
+
 The runner knows no dimension key, value or entity type. Its inputs come from the Search's `input_schema` defaults:
 
 | input | meaning |

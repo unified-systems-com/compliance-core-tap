@@ -33,13 +33,13 @@ from collections import defaultdict
 from typing import Any
 
 from django.db.models import Count
-from django.db.models.fields.json import KeyTextTransform
 
 from tap_grid.gryphon import read_scope
 from tap_grid.models import Search
 from tap_grid.registry import get_model_class
 
 from .dimension_dictionary import read_dictionary as _dictionary
+from .stored_dimensions import value_text
 
 
 def _inputs(inputs: dict[str, Any]) -> tuple[str, list[str]]:
@@ -75,19 +75,20 @@ def dimension_coverage(
     key, exclude = _inputs(inputs)
     description, declared = _dictionary(key, db_alias=db_alias)
 
-    stamped = KeyTextTransform(key, "dimensions")
+    stamped = value_text(key)
     entities = read_scope.node_relation(read_scope.DEFAULT_SCOPE, None, db_alias=db_alias)
     if exclude:
         entities = entities.exclude(entity_type__in=exclude)
-    grouped = (
-        entities.annotate(stamped_value=stamped)
-        .filter(stamped_value__isnull=False)
-        .values("stamped_value", "entity_type")
-        .annotate(n=Count("pk"))
-    )
     by_value: dict[str, dict[str, int]] = defaultdict(dict)
-    for row in grouped:
-        by_value[row["stamped_value"]][row["entity_type"]] = int(row["n"])
+    if stamped is not None:  # None: no row can carry the key, so every declared value counts zero
+        grouped = (
+            entities.annotate(stamped_value=stamped)
+            .filter(stamped_value__isnull=False)
+            .values("stamped_value", "entity_type")
+            .annotate(n=Count("pk"))
+        )
+        for row in grouped:
+            by_value[row["stamped_value"]][row["entity_type"]] = int(row["n"])
 
     values: list[dict[str, Any]] = []
     for value in [*sorted(declared), *sorted(set(by_value) - set(declared))]:

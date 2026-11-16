@@ -8,6 +8,7 @@ from tap_plugin.compliance_core.models import ComplianceContext
 from tap_grid.caller_context import CallerContext
 from tap_grid.models import Entity
 from tap_grid.services import WriteOperation, write_batch
+from tap_plugin.compliance_core.tests.conftest import dimension_view
 
 
 @pytest.fixture
@@ -113,7 +114,7 @@ class TestComplianceContextModel:
         result = write_batch([op], caller_context=ctx)
         assert result.results[0].success
         entity = Entity.objects.get(pk=result.results[0].entity_id)
-        assert entity.dimensions.get("compliance") == "context"
+        assert dimension_view(entity).get("compliance") == "context"
 
     def test_per_regime_dimension_override(self, ctx):
         """Callers may override DEFAULT_DIMENSIONS to carry the regime's dimension."""
@@ -129,7 +130,7 @@ class TestComplianceContextModel:
         result = write_batch([op], caller_context=ctx)
         assert result.results[0].success
         entity = Entity.objects.get(pk=result.results[0].entity_id)
-        assert entity.dimensions.get("compliance") == "fedramp-20x"
+        assert dimension_view(entity).get("compliance") == "fedramp-20x"
 
     def test_multiple_contexts_coexist_per_regime(self, ctx):
         """One ComplianceContext per regime — multiple regimes coexist on a Grid."""

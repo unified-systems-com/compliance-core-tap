@@ -16,6 +16,7 @@ from tap_plugin.compliance_core.searches.dimension_mapping import dimension_mapp
 from tap_grid.models import Entity, Search
 from tap_grid.service_types import WriteOperation
 from tap_grid.services import delete_node, write_batch
+from tap_plugin.compliance_core.tests.conftest import stored
 
 CC = "compliance_core__compliance_"
 EXCEPTION = f"{CC}exception"
@@ -138,7 +139,7 @@ class TestGroupedSummary:
         gone = _node(EXCEPTION, {"name": "gone"}, {"inventory": "servers", "team": "a"})
         delete_node(gone.pk)
         nulled = _node(EXCEPTION, {"name": "nulled"})
-        Entity.objects.filter(pk=nulled.pk).update(dimensions={"inventory": None, "team": "a"})
+        Entity.objects.filter(pk=nulled.pk).update(dimensions=stored({"inventory": None, "team": "a"}))
         assert _rows(_summary(MAPPINGS))["servers"]["denominator"] == 2
 
     @pytest.mark.spec("req-compliance-core-dimension-mapping-24")
@@ -193,7 +194,7 @@ class TestAnyValueKeys:
         _node(EXCEPTION, {"name": "ok"}, {"team": "a", "zone": "red"})
         e = Entity.objects.create(entity_type=EXCEPTION, name="odd-team")
         Entity.objects.filter(pk=e.pk).update(
-            dimensions={"team": 5, "zone": "red"}
+            dimensions=stored({"team": 5, "zone": "red"})
         )  # a non-string value is still present
         got = {
             r["name"]: r["status"]
@@ -223,7 +224,7 @@ class TestGroupedEntities:
     @pytest.mark.parametrize("key", ["a__b", "has.dot", "x__isnull"])
     def test_a_group_key_with_double_underscores_or_dots_is_an_exact_key(self, key: str) -> None:
         e = Entity.objects.create(entity_type=EXCEPTION, name="odd-key")
-        Entity.objects.filter(pk=e.pk).update(dimensions={key: "g", "team": "a"})
+        Entity.objects.filter(pk=e.pk).update(dimensions=stored({key: "g", "team": "a"}))
         out = dimension_mapping_summary(
             Search(),
             {"mappings": [{"entity_type": EXCEPTION, "keys": [TEAM_ANY]}], "group_by": key},

@@ -22,7 +22,8 @@ Inputs (both runners):
 A key is *present* on an entity when its ``dimensions`` map has it with a value that is not ``null`` (``null`` is unobserved
 and counts as absent), and *correct* when the value is a string equal to one of the key's ``allowed`` strings, exactly, or,
 for a key with no ``allowed``, when it is present. The dimensions are compared as the JSON the entity stores, so a number or
-an array is never mistaken for a string.
+an array is never mistaken for a string. The stored map is read by dimension name through ``stored_dimensions``, whichever
+way the grid keys it.
 
     mapped              ``match: any``: at least one listed key is correct; ``match: all``: every listed key is correct
     mapped_incorrectly  not mapped, and at least one listed key is present with a value that is not allowed
@@ -45,6 +46,7 @@ from tap_grid.models import Search
 
 from .dimension_coverage import _label
 from .dimension_dictionary import read_dictionary
+from .stored_dimensions import by_name, storage_key
 
 MAX_MAPPING_ROWS = 50
 MAX_KEYS = 20
@@ -182,7 +184,10 @@ def _entity_inputs(inputs: dict[str, Any]) -> tuple[list[MappingRow], str | None
 
 
 def classify(dimensions: Any, row: MappingRow) -> tuple[str, dict[str, Any]]:
-    """``(state, found)`` for one entity's dimensions against one mapping row; ``found`` is the listed keys it carries."""
+    """``(state, found)`` for one entity's dimensions against one mapping row; ``found`` is the listed keys it carries.
+
+    ``dimensions`` is the map by dimension name (``stored_dimensions.by_name`` of a stored one).
+    """
     dims = dimensions if isinstance(dimensions, dict) else {}
     found = {key: dims[key] for key, _ in row.keys if dims.get(key) is not None}
     correct = [
@@ -210,11 +215,15 @@ def _entities(entity_types: tuple[str, ...], *, db_alias: str) -> Any:
 def _grouped_population(group_by: str, *, db_alias: str) -> Any:
     """Every live entity carrying the key, of any type, streamed: ``(pk, name, entity_type, dimensions)``.
 
-    The database filter keeps entities that have the key at all; a JSON ``null`` value is dropped by the caller.
+    The database filter keeps entities that have the key at all; a JSON ``null`` value is dropped by the caller. A key no
+    row can carry (no Dimension node declares it, on a grid that keys by node) has an empty population.
     """
+    key = storage_key(group_by)
+    if key is None:
+        return iter(())
     return (
         read_scope.node_relation(read_scope.DEFAULT_SCOPE, None, db_alias=db_alias)
-        .filter(dimensions__has_key=group_by)  # the key is a bound parameter, never part of a lookup path
+        .filter(dimensions__has_key=key)  # the key is a bound parameter, never part of a lookup path
         .values_list("pk", "name", "entity_type", "dimensions")
         .iterator(chunk_size=_CHUNK)
     )
@@ -277,7 +286,8 @@ def _grouped_stream(rows: list[MappingRow], group_by: str, excluded: frozenset[s
     """``(group, pk, name, entity_type, state, found, judging index or None)`` for each entity in the grouped population."""
     exact, catch_all = _judging(rows)
     for pk, name, entity_type, dimensions in _grouped_population(group_by, db_alias=db_alias):
-        value = dimensions.get(group_by) if isinstance(dimensions, dict) else None
+        named = by_name(dimensions)
+        value = named.get(group_by)
         if value is None:
             continue
         group = _value_text(value)
@@ -287,7 +297,7 @@ def _grouped_stream(rows: list[MappingRow], group_by: str, excluded: frozenset[s
         if index is None:
             yield group, pk, name, entity_type, "unmapped", {}, None
             continue
-        state, found = classify(dimensions, rows[index])
+        state, found = classify(named, rows[index])
         yield group, pk, name, entity_type, state, found, index
 
 
@@ -344,7 +354,7 @@ def dimension_mapping_summary(
     for row in mapping:
         counts = dict.fromkeys(STATES, 0)
         for _pk, _name, _type, dimensions in _entities(row.entity_types, db_alias=db_alias):
-            counts[classify(dimensions, row)[0]] += 1
+            counts[classify(by_name(dimensions), row)[0]] += 1
         denominator = sum(counts.values())
         rows.append(
             {
@@ -406,7 +416,7 @@ def dimension_mapping_entities(
             return
         for index, row in enumerate(mapping):
             for pk, name, entity_type, dimensions in _entities(row.entity_types, db_alias=db_alias):
-                state, found = classify(dimensions, row)
+                state, found = classify(by_name(dimensions), row)
                 if wanted is not None and state != wanted:
                     continue
                 seen += 1

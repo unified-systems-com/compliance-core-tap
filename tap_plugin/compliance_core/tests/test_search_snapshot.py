@@ -26,6 +26,7 @@ from tap_cares.services import run_collection
 from tap_grid.models import Edge, Entity
 from tap_grid.registry import get_model_class
 from tap_grid.services import create_edge, create_node
+from tap_plugin.compliance_core.tests.conftest import dimension_view
 
 SNAPSHOT = "compliance_core__compliance_search_snapshot"
 CAPTURES = "CAPTURES_SEARCH__compliance_core"
@@ -110,7 +111,7 @@ class TestNode:
     def test_a_good_snapshot_is_created_with_its_dimension(self) -> None:
         made = create_node(SNAPSHOT, GOOD)
         assert made.success, made.errors
-        assert Entity.objects.get(pk=made.entity_id).dimensions == {"compliance": "search-snapshot"}
+        assert dimension_view(Entity.objects.get(pk=made.entity_id)) == {"compliance": "search-snapshot"}
         row = get_model_class(SNAPSHOT).objects.get(entity_id=made.entity_id)
         assert row.rows == [{"a": 1}, {"a": 2}] and row.truncated is False and row.row_count == 2
 
@@ -160,7 +161,7 @@ class TestNode:
     def test_the_edge_links_a_snapshot_to_a_real_search(self) -> None:
         snapshot = Entity.objects.get(pk=create_node(SNAPSHOT, GOOD).entity_id)
         edge = create_edge(snapshot, _search(), CAPTURES)
-        assert edge.entity.dimensions == {"compliance": "search-snapshot"}
+        assert dimension_view(edge.entity) == {"compliance": "search-snapshot"}
 
     @pytest.mark.spec("req-compliance-core-search-snapshot-8")
     def test_the_package_has_no_code_that_updates_a_snapshot(self) -> None:
