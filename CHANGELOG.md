@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.12](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.11...v0.8.12) (2026-11-16)
+
+
+### Features
+
+* declare Dimension nodes for this plugin's dimension keys ([#87](https://github.com/unified-systems-com/compliance-core-tap/issues/87)) ([420ebb9](https://github.com/unified-systems-com/compliance-core-tap/commit/420ebb9ccd15b00438bf708bf18687ddc7a3054e))
+
+
+### Bug Fixes
+
+* **searches:** read stored dimensions by name on either storage shape ([93a0fa7](https://github.com/unified-systems-com/compliance-core-tap/commit/93a0fa723ef175547c8b46baffb2762ee768ddf9))
+* **searches:** read stored dimensions by name on either storage shape ([0c1b5a7](https://github.com/unified-systems-com/compliance-core-tap/commit/0c1b5a79308d2836d12e305d3dfbf883d052b07d))
+
 ## [0.8.11](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.10...v0.8.11) (2026-10-29)
 
 
