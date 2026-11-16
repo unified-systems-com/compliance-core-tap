@@ -15,6 +15,7 @@ import tap_plugin.compliance_core.models as compliance  # noqa: F401 - trigger m
 from tap_grid.models import Entity
 from tap_grid.registry import get_model_class
 from tap_grid.services import create_edge, create_node, delete_node, replace_node
+from tap_plugin.compliance_core.tests.conftest import dimension_view
 
 CC = "compliance_core__compliance_"
 EXCEPTION = f"{CC}exception"
@@ -133,7 +134,7 @@ class TestInstanceNode:
         assert model.ENTITY_TYPE == INSTANCE
         assert model.NATURAL_KEY == ("source", "source_key")
         entity = _node(INSTANCE, INSTANCE_PAYLOAD)
-        assert entity.dimensions == {"compliance": "exception-instance"}
+        assert dimension_view(entity) == {"compliance": "exception-instance"}
 
     def test_outcome_and_time_start_unobserved(self) -> None:
         row = _row(INSTANCE, _node(INSTANCE, INSTANCE_PAYLOAD))
@@ -210,7 +211,7 @@ class TestEdges:
         exempts = create_edge(self.inst, self.vuln, EXEMPTS)
         scoped = create_edge(self.inst, self.anchor, SCOPED)
         covers = create_edge(self.inst, self.finding, COVERS)
-        dims = {e.entity.dimensions["compliance"] for e in (grants, exempts, scoped, covers)}
+        dims = {dimension_view(e.entity)["compliance"] for e in (grants, exempts, scoped, covers)}
         assert dims == {"exception-instance", "vulnerability", "finding"}
 
     def test_an_anchor_may_be_any_node(self) -> None:

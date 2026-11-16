@@ -30,6 +30,7 @@ from tap_grid.models import Entity, Search
 from tap_grid.search import execute_search
 from tap_grid.service_types import WriteOperation
 from tap_grid.services import delete_node, write_batch
+from tap_plugin.compliance_core.tests.conftest import stored
 
 CC = "compliance_core__compliance_"
 EXCEPTION = f"{CC}exception"
@@ -60,7 +61,7 @@ def build() -> dict[str, Entity]:
     # JSON null and a number are written straight onto the spine row: the service layer only stamps strings.
     for name, dims in (("z-null", {"zone": None, "team": "b"}), ("z-num", {"zone": 5, "team": "a"})):
         entity = _node(EXCEPTION, {"name": name})
-        Entity.objects.filter(pk=entity.pk).update(dimensions=dims)
+        Entity.objects.filter(pk=entity.pk).update(dimensions=stored(dims))
         nodes[name] = entity
     _node(ARTIFACT, {"name": "art", "kind": "iiw"}, {"zone": "red", "team": "a"})
     return nodes

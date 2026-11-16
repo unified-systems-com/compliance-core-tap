@@ -9,6 +9,7 @@ from tap_plugin.compliance_core.models import ComplianceEvidence, ComplianceFind
 from tap_grid.caller_context import CallerContext
 from tap_grid.models import Edge, Entity
 from tap_grid.services import WriteOperation, write_batch
+from tap_plugin.compliance_core.tests.conftest import dimension_view
 
 
 @pytest.fixture
@@ -78,7 +79,7 @@ class TestEvidenceModel:
         # Regime-agnostic substrate: the model default is a neutral type marker,
         # not a regime (req-compliance-core-regime-neutral). The regime is layered
         # per-instance by the collector that mints the node.
-        assert entity.dimensions.get("compliance") == "evidence"
+        assert dimension_view(entity).get("compliance") == "evidence"
 
     def test_display_name_synced_to_spine(self, ctx):
         op = WriteOperation(
@@ -192,4 +193,4 @@ class TestCitesEvidenceEdge:
         assert result.results[0].success
         edge_entity = Entity.objects.get(pk=result.results[0].entity_id)
         # Neutral type marker (the edge's target-node kind), not a regime.
-        assert edge_entity.dimensions.get("compliance") == "evidence"
+        assert dimension_view(edge_entity).get("compliance") == "evidence"
