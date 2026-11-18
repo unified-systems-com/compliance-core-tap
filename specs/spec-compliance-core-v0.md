@@ -347,6 +347,11 @@ rows of the two retired types on an upgraded grid (their ids derive from the slu
 collection re-emits them under the new names; nodes are untouched). Consumers that read the old
 slugs (fedramp_20x_ksi panels and grift) retarget in their own repos.
 
+`CARRIES_COMPLIANCE_FINDING` declares an identity with no discriminators: one carrier and one
+finding have one such edge, so a producer that sends the relationship on every run does not add an
+edge per run (`tests/test_carries_edge_identity.py`, issue 91). Declaring it does not merge
+duplicates a grid already holds.
+
 Wildcard **sources** on `CARRIES_COMPLIANCE_FINDING` and `SCOPED_TO_COMPLIANCE_BOUNDARY` are
 deliberate: any asset can carry a finding, any component can be in scope for a boundary,
 across regimes. The wildcard **target** on `CONCERNS_COMPLIANCE_CONTROL` is the mirror
