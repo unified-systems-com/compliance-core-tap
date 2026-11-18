@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.13](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.12...v0.8.13) (2026-11-18)
+
+
+### Bug Fixes
+
+* **edges:** CARRIES_COMPLIANCE_FINDING written twice is one edge ([37ad5d0](https://github.com/unified-systems-com/compliance-core-tap/commit/37ad5d08407757d63c4a858736aaf285f6daaca2))
+* **edges:** CARRIES_COMPLIANCE_FINDING written twice is one edge ([332145f](https://github.com/unified-systems-com/compliance-core-tap/commit/332145f16385aefeb98e31438645ae4e27b47ccb)), refs [#91](https://github.com/unified-systems-com/compliance-core-tap/issues/91)
+
 ## [0.8.12](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.11...v0.8.12) (2026-11-16)
 
 
