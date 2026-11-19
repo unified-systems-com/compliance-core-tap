@@ -16,7 +16,7 @@ from tap_plugin.compliance_core.searches.dimension_mapping import dimension_mapp
 from tap_grid.models import Entity, Search
 from tap_grid.service_types import WriteOperation
 from tap_grid.services import delete_node, write_batch
-from tap_plugin.compliance_core.tests.conftest import stored
+from tap_plugin.compliance_core.tests.conftest import declare_dimension, stored
 
 CC = "compliance_core__compliance_"
 EXCEPTION = f"{CC}exception"
@@ -38,9 +38,9 @@ def _node(type_slug: str, payload: dict[str, Any], dimensions: dict[str, Any] | 
 
 
 def _declare(**values: str) -> None:
-    _node("dimension", {"name": "inventory", "description": "Inventory."})
+    declare_dimension("inventory", "Inventory.")
     for value, text in values.items():
-        _node("dimension", {"name": f"inventory.{value}", "description": text})
+        declare_dimension(f"inventory.{value}", text)
 
 
 def _summary(mappings: list[dict[str, Any]], **extra: Any) -> dict[str, Any]:

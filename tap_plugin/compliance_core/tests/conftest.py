@@ -1,8 +1,5 @@
 """Shared test scaffolding for the compliance_core plugin's suite."""
 
-import json
-import uuid
-
 import pytest
 
 
@@ -35,38 +32,52 @@ def stored(dimensions: dict) -> dict:
 # Dimension names the Search-runner tests stamp on entities. They belong to no plugin: the runners take the key as an
 # input and know none, so the tests make their own.
 TEST_DIMENSIONS = ("zone", "team", "inventory", "a__b", "has.dot", "x__isnull")
-_TEST_NAMESPACE = uuid.UUID("01a1d7f0-0000-7000-8000-00000000c0de")
+
+
+def _live_names() -> set[str] | None:
+    """The names live Dimension nodes carry, or None on a grid that accepts any key (tap 0.3.4 or earlier)."""
+    try:
+        from tap_grid.live_dimensions import vocabulary
+    except ImportError:
+        return None
+    return set(vocabulary().by_name)
+
+
+def grid_requires_declared_dimensions() -> bool:
+    """Whether the grid under test refuses a dimension key that no live Dimension node declares."""
+    return _live_names() is not None
+
+
+def declare_dimension(name: str, description: str = "") -> None:
+    """Declare the Dimension node ``name`` with ``description``, whether or not the grid already carries the name.
+
+    A grid that only accepts declared dimensions refuses a second node of one name, and core's test harness seeds
+    some of the names these suites use (``zone``). So a name that is already live keeps its node and takes the
+    description; any other name gets a new node. On a grid from tap 0.3.4 or earlier the node is simply created.
+    """
+    from tap_grid.models import Dimension
+    from tap_grid.services import WriteOperation, write_batch
+
+    live = _live_names()
+    if live is not None and name in live:
+        if description:
+            Dimension.objects.filter(name=name).update(description=description)
+        return
+    payload = {"name": name, "description": description} if description else {"name": name}
+    result = write_batch([WriteOperation(verb="create_node", type_slug="dimension", payload=payload)])
+    assert result.success, result.errors or [r.errors for r in result.results]  # nosec B101
 
 
 @pytest.fixture(autouse=True)
-def declared_test_dimensions(tmp_path):
-    """Declare ``TEST_DIMENSIONS`` for the test, on a grid that only accepts declared dimensions.
+def declared_test_dimensions(request):
+    """Declare ``TEST_DIMENSIONS`` for a database test, on a grid that only accepts declared dimensions.
 
-    Such a grid takes its vocabulary from the installed seed documents, so the names are added to that table from a
-    seed document of the test's own and the table is put back afterwards. A grid from tap 0.3.4 or earlier accepts
-    any key and has no table.
+    Such a grid resolves a dimension name through its live Dimension nodes, so each name the suites stamp needs a
+    node before the first write. A grid from tap 0.3.4 or earlier accepts any key and needs nothing.
     """
-    try:
-        from tap_grid import dimension_vocabulary
-    except ImportError:
-        yield
+    marker = request.node.get_closest_marker("django_db")
+    if marker is None or _live_names() is None:
         return
-    nodes = [
-        {
-            "entity": {"entity_id": str(uuid.uuid5(_TEST_NAMESPACE, name)), "entity_type": "dimension", "name": name},
-            "node": {"name": name},
-        }
-        for name in TEST_DIMENSIONS
-    ]
-    batch = {"batch_entity": {"entity_id": str(_TEST_NAMESPACE), "entity_type": "batch"}, "nodes": nodes}
-    seed = tmp_path / "test-dimensions.grift.json"
-    seed.write_text(json.dumps({"batches": [batch]}), encoding="utf-8")
-    base = dimension_vocabulary.vocabulary()
-    extra = dimension_vocabulary.build([("compliance_core tests", seed)])
-    dimension_vocabulary.reset(
-        dimension_vocabulary.Vocabulary(by_id={**base.by_id, **extra.by_id}, by_name={**base.by_name, **extra.by_name})
-    )
-    try:
-        yield
-    finally:
-        dimension_vocabulary.reset(base)
+    request.getfixturevalue("transactional_db" if marker.kwargs.get("transaction") else "db")
+    for name in TEST_DIMENSIONS:
+        declare_dimension(name)
