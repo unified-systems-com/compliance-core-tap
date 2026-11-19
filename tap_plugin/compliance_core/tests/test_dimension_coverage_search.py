@@ -23,6 +23,7 @@ from tap_grid.models import Entity, Search
 from tap_grid.search import execute_search
 from tap_grid.service_types import WriteOperation
 from tap_grid.services import delete_node, write_batch
+from tap_plugin.compliance_core.tests.conftest import declare_dimension
 
 CC = "compliance_core__compliance_"
 EXCEPTION = f"{CC}exception"
@@ -48,7 +49,7 @@ class Graph:
             ("zone.blue", "The blue zone, which nothing is in."),
             ("other.red", "A different key's red."),
         ):
-            _node("dimension", {"name": name, "description": text})
+            declare_dimension(name, text)
         red = {"zone": "red"}
         _node(EXCEPTION, {"name": "e1"}, red)
         _node(EXCEPTION, {"name": "e2"}, red)

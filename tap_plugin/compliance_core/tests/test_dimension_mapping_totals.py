@@ -22,6 +22,7 @@ from tap_grid.models import Entity, Search
 from tap_grid.search import execute_search
 from tap_grid.service_types import WriteOperation
 from tap_grid.services import create_node, patch_node, write_batch
+from tap_plugin.compliance_core.tests.conftest import declare_dimension
 
 CC = "compliance_core__compliance_"
 EXCEPTION = f"{CC}exception"
@@ -68,8 +69,8 @@ def _build() -> None:
     _node(ARTIFACT, {"name": "a-ok", "kind": "iiw"}, {"inventory": "apps", "zone": "red"})
     _node(ARTIFACT, {"name": "a-bad", "kind": "iiw"}, {"inventory": "apps", "zone": "blue"})
     _node(ARTIFACT, {"name": "a-bad2", "kind": "iiw"}, {"inventory": "apps", "zone": "blue"})
-    _node("dimension", {"name": "inventory", "description": "Inventory."})
-    _node("dimension", {"name": "inventory.empty", "description": "Empty group."})  # declared, no entities
+    declare_dimension("inventory", "Inventory.")
+    declare_dimension("inventory.empty", "Empty group.")  # declared, no entities
 
 
 def run(search: Entity) -> dict[str, Any]:

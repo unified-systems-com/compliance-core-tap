@@ -30,7 +30,7 @@ from tap_grid.models import Entity, Search
 from tap_grid.search import execute_search
 from tap_grid.service_types import WriteOperation
 from tap_grid.services import delete_node, write_batch
-from tap_plugin.compliance_core.tests.conftest import stored
+from tap_plugin.compliance_core.tests.conftest import declare_dimension, grid_requires_declared_dimensions, stored
 
 CC = "compliance_core__compliance_"
 EXCEPTION = f"{CC}exception"
@@ -263,18 +263,25 @@ class TestWarnings:
     @pytest.mark.spec("req-compliance-core-dimension-mapping-15")
     def test_undeclared_keys_and_values_warn_and_change_no_state(self) -> None:
         build()
-        _node("dimension", {"name": "zone", "description": "The zone."})
-        _node("dimension", {"name": "zone.red", "description": "Red."})
+        declare_dimension("zone", "The zone.")
+        declare_dimension("zone.red", "Red.")
         before = by_name(entities())
-        out = dimension_mapping_summary(Search(), {"mappings": [ROW]}, db_alias="default")
-        assert out["warnings"]["undeclared_keys"] == ["team"]  # zone has a node, team has none
+        if grid_requires_declared_dimensions():
+            # Entities can only carry declared keys here, so `team` has a node. A mapping may still name a key nothing
+            # declares, and that is the key the warning is about.
+            row = {**ROW, "keys": [*ROW["keys"], {"key": "never_declared"}]}
+            undeclared = ["never_declared"]
+        else:
+            row, undeclared = ROW, ["team"]  # zone has a node, team has none
+        out = dimension_mapping_summary(Search(), {"mappings": [row]}, db_alias="default")
+        assert out["warnings"]["undeclared_keys"] == undeclared
         assert out["warnings"]["undeclared_values"] == ["team = a", "team = b", "zone = green"]
         assert by_name(entities()) == before
 
     @pytest.mark.spec("req-compliance-core-dimension-mapping-15")
     def test_a_fully_declared_mapping_has_no_warnings(self) -> None:
         for name in ("zone", "zone.red", "zone.green", "team", "team.a", "team.b"):
-            _node("dimension", {"name": name, "description": name})
+            declare_dimension(name, name)
         assert dimension_mapping_summary(Search(), {"mappings": [ROW]}, db_alias="default")["warnings"] == {}
 
 
