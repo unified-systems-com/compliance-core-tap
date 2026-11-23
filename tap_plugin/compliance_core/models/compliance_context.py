@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -58,6 +59,8 @@ class ComplianceContext(BaseModel):
     # batch by name. That is the fail-loud end of the trade, and it is the right one — the
     # alternative silently merges two grids' postures.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("regime",)
+    # No event time: a regime context carries no time field.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Compliance Context"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "Per-regime compliance posture metadata on a Grid. Each instance "

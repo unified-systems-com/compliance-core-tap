@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import Moment
 from tap_grid.models import BaseModel
 
 #: A detection time is an instant, so a value must carry a time part. The `pattern` refuses a bare
@@ -53,6 +54,9 @@ class ComplianceFinding(BaseModel):
     # `source` namespaces `source_key`, so two producers can never collide and neither has to
     # know the other's keying rules. compliance_core never parses `source_key`.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "source_key")
+    # Event time (rule 13): when the producer first detected the finding, as its own record gives it;
+    # every writer fills it so (an alert's created_at, Inspector firstObservedAt, Qualys first found).
+    EVENT_TIME: ClassVar[Moment] = Moment("first_detected_at", "first_seen")
     ENTITY_NAME: ClassVar[str] = "Finding"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "A single instance of non-compliance or risk observed against an asset, "

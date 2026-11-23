@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -41,6 +42,8 @@ class ComplianceBoundary(BaseModel):
     # tap-plugin-compliance-core). KEYLESS was refused for the same reason as the others — an
     # authorization package re-read is a re-observation, not a new boundary.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "source_key")
+    # No event time: a boundary carries no time field.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Authorization Boundary"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "An authorization boundary — the perimeter of system components in "

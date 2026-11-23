@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -35,6 +36,8 @@ class ComplianceEvidence(BaseModel):
     # tap-plugin-compliance-core). KEYLESS was refused: evidence IS re-observed — every rescan
     # re-attaches the same material — and a keyless ref mints a new node every run.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "source_key")
+    # No event time: an evidence record carries no time field.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Evidence"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "A supporting artifact for a compliance finding — screenshot, scanner output, "

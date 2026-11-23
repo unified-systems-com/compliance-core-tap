@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -35,6 +36,8 @@ class ComplianceScanner(BaseModel):
     # unrecoverably, where a false split is visible and reconcilable (ruled by George 2026-10-15,
     # Issue# 32 - this repo). compliance_core never parses either half.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "scanner_key")
+    # No event time: an install of a scanner carries no time field (configuration holds none today).
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Scanner"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "A detection tool installed at one place (Trivy as the scan job of one workflow), not the "

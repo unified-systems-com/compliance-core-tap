@@ -39,6 +39,9 @@ class ComplianceScanRun(BaseModel):
     # the timestamp nor the commit is in the key: two runs can share a commit, and a timestamp is
     # never identity.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "run_key")
+    # EVENT_TIME is left undeclared on purpose, for the owner to rule: the spec reads observed_at as the
+    # producer's own time for the run (github_core: an analysis's created_at, a scan the source
+    # performed), while grype-tap fills it with its own collector's clock at the start of its run.
     ENTITY_NAME: ClassVar[str] = "Scan Run"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "One execution of a scanner: the tool version, the commit and ref it analysed, what it "

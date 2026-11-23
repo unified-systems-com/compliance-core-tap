@@ -5,6 +5,7 @@ from typing import Any, ClassVar
 from django.db import models
 from tap_plugin.compliance_core.models.compliance_exception import INSTANT_SCHEMA
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 _OUTCOME_VALUES = ["held", "falsified"]
@@ -39,6 +40,8 @@ class ComplianceExceptionInstance(BaseModel):
     # Deterministic from the parent exception's key, the vulnerability id and the anchors, so the
     # same application is found again on every run. compliance_core never parses `source_key`.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "source_key")
+    # No event time: verified_at is when the latest check ran and moves with every check, a sighting.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Exception Instance"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "One exception applied to one vulnerability within one declared scope, with the result of "

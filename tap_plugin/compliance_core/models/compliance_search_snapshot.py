@@ -5,6 +5,7 @@ from typing import Any, ClassVar
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 MAX_ROWS = 1000
@@ -55,6 +56,9 @@ class ComplianceSearchSnapshot(BaseModel):
     # A snapshot is an observation made once, so there is nothing to re-observe: the key carries the time, and a
     # node sent again under an existing key would replace the row and null whatever it left out (Issue# 1071 - tap).
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "snapshot_key")
+    # No event time: observed_at is when this plugin's own collector ran the Search, and a run of a
+    # plugin's own collector has none (owner ruling); it stays the series' typed time.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Search Snapshot"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "One run of one Search at one time, with the rows it returned held inside the node."
