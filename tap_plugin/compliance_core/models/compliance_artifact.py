@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -39,6 +40,9 @@ class ComplianceArtifact(BaseModel):
     # `source_url` keeps the fetch address as the observation it is (Issue# 8 -
     # tap-plugin-compliance-core).
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "source_key")
+    # No event time: fetched_at and verified_at are the fetching collector's own times (collection
+    # time, rule 13). A document's own time, where it has one, sits in content in a kind-specific shape.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Compliance Artifact"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "A fetched compliance rendering kept whole — an OSCAL SSP, OSCAL "

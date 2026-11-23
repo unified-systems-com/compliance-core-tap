@@ -5,6 +5,7 @@ from typing import Any, ClassVar
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from tap_grid.event_time import Interval
 from tap_grid.models import BaseModel
 
 _KIND_VALUES = [
@@ -79,6 +80,9 @@ class ComplianceException(BaseModel):
     # neither field, is created once by an explicit write, and is never re-observed — so nothing
     # is lost there; what would be lost under KEYLESS is the re-import of an exception register.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "source_key")
+    # Event time: the decision holds from granted_at until expires_at, its hard ceiling (null: none).
+    # review_by is a deadline, not an end; revocation states no time.
+    EVENT_TIME: ClassVar[Interval] = Interval("granted_at", "created", end="expires_at")
     ENTITY_NAME: ClassVar[str] = "Exception"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "A formal acceptance of one or more findings, typically recording "

@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -39,6 +40,9 @@ class ComplianceScanRun(BaseModel):
     # the timestamp nor the commit is in the key: two runs can share a commit, and a timestamp is
     # never identity.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("source", "run_key")
+    # No event time: its only writer stamps the collector's own clock, so for now its time is
+    # collection time (owner ruling Q48c, tap#1284).
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     ENTITY_NAME: ClassVar[str] = "Scan Run"
     ENTITY_DESCRIPTION: ClassVar[str] = (
         "One execution of a scanner: the tool version, the commit and ref it analysed, what it "
