@@ -2,8 +2,8 @@
 what core derives from it.
 
 The first class pins the declarations, so a model added later without one, or one that names the wrong
-field, fails here. `compliance_scan_run` is the one model left undeclared on purpose, held for the owner,
-and the pin says so. The second class applies core's own derivation to plain values: an exception with no
+field, fails here. `compliance_scan_run` declares none: its only writer stamps the collector's own clock
+(owner ruling Q48c). The second class applies core's own derivation to plain values: an exception with no
 ceiling is open-ended, not timeless.
 """
 
@@ -36,24 +36,19 @@ DECLARED = {
     ComplianceEvidence: NO_EVENT_TIME,
     ComplianceExceptionInstance: NO_EVENT_TIME,
     ComplianceScanner: NO_EVENT_TIME,
+    ComplianceScanRun: NO_EVENT_TIME,
     ComplianceSearchSnapshot: NO_EVENT_TIME,
 }
-#: Left undeclared until the owner rules what its observed_at means (see the model's comment).
-UNDECLARED = {ComplianceScanRun}
 
 GRANTED = datetime(2026, 11, 2, 9, 30, tzinfo=UTC)
 CEILING = datetime(2027, 5, 2, 9, 30, tzinfo=UTC)
 
 
 class TestDeclarations:
-    def test_every_model_of_the_plugin_decides_or_is_held(self) -> None:
+    def test_every_model_of_the_plugin_decides(self) -> None:
         own = {get_model_class(slug) for slug in list_entity_types() if slug.startswith("compliance_core__")}
-        assert own == set(DECLARED) | UNDECLARED
-        assert {model: model.EVENT_TIME for model in DECLARED} == DECLARED
-
-    def test_the_held_model_declares_nothing(self) -> None:
-        for model in UNDECLARED:
-            assert "EVENT_TIME" not in vars(model), model.__name__
+        assert own == set(DECLARED)
+        assert {model: model.EVENT_TIME for model in own} == DECLARED
 
     def test_core_accepts_each_declaration(self) -> None:
         for model in DECLARED:
