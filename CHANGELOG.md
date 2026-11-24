@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.8.14](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.13...v0.8.14) (2026-11-24)
+
+
+### Features
+
+* declare event time for compliance_core models (tap v0.4.7) ([38e5949](https://github.com/unified-systems-com/compliance-core-tap/commit/38e59493e2d99985969cb38f4df190f2f125b7c9))
+* declare event time for compliance_core models (tap v0.4.7) ([a868603](https://github.com/unified-systems-com/compliance-core-tap/commit/a8686036e5a37966187f4743f74dbc99c24ba6f0))
+* one CVSS slot on compliance_vulnerability, filled when any field is set (Q157) ([16d9ed2](https://github.com/unified-systems-com/compliance-core-tap/commit/16d9ed207e8736ab86235486d95a254c628b33c6))
+* one CVSS slot on compliance_vulnerability, filled when any field is set (Q157) ([1d3201c](https://github.com/unified-systems-com/compliance-core-tap/commit/1d3201c17cf1a66128ac80f43e8d902146c0f3f3))
+* tap v0.4.9 — spine copies migration, format "1" documents ([801ed43](https://github.com/unified-systems-com/compliance-core-tap/commit/801ed433ab774710cee04d1db6fb543f17c50948))
+* tap v0.4.9 — spine copies migration, format "1" documents ([3dce65c](https://github.com/unified-systems-com/compliance-core-tap/commit/3dce65c650e20166c1540b67abc5186b190b7731))
+
+
+### Bug Fixes
+
+* compliance_scan_run declares no event time (owner ruling Q48c) ([9ac84f6](https://github.com/unified-systems-com/compliance-core-tap/commit/9ac84f66c34e08838372c599022ef847b7b6be13))
+* drop committed bytecode and ignore it ([95632c4](https://github.com/unified-systems-com/compliance-core-tap/commit/95632c40c4e3d0c1b61b2513ef0ccd398f09a4be))
+
 ## [0.8.13](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.12...v0.8.13) (2026-11-18)
 
 
