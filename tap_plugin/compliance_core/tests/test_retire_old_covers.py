@@ -88,11 +88,17 @@ class TestRetireOldCovers:
 
     @pytest.mark.spec("req-compliance-core-exception-edges-5")
     def test_the_real_migration_path_with_historical_models(self) -> None:
-        """Roll back to 0010, leave an old-shape edge and a new-shape one, and migrate forward through the executor."""
+        """Roll back to 0010, leave an old-shape edge and a new-shape one, and migrate forward through the executor.
+
+        Forward goes to the app's leaf, not to 0011: stopping at 0011 would leave the later schema
+        migrations (0012's spine copies) unapplied for every test that runs after this one.
+        """
         from django.db import connection
         from django.db.migrations.executor import MigrationExecutor
 
-        MigrationExecutor(connection).migrate([("compliance_core", "0010_search_snapshot")])
+        executor = MigrationExecutor(connection)
+        leaves = [node for node in executor.loader.graph.leaf_nodes() if node[0] == "compliance_core"]
+        executor.migrate([("compliance_core", "0010_search_snapshot")])
         try:
             exception, instance, finding = (
                 _node("exception", "ex"),
@@ -101,6 +107,6 @@ class TestRetireOldCovers:
             )
             old, new = _edge(exception, finding), _edge(instance, finding)
         finally:
-            MigrationExecutor(connection).migrate([("compliance_core", "0011_retire_exception_covers_rows")])
+            MigrationExecutor(connection).migrate(leaves)
         assert not Edge.objects.filter(pk=old.pk).exists()
         assert Edge.objects.filter(pk=new.pk).exists()
