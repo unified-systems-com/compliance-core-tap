@@ -23,6 +23,7 @@ from datetime import UTC, datetime
 from typing import Any, ClassVar
 
 from tap_cares.collectors import CollectorBase
+from tap_grid.grift.upgrade import build_header
 from tap_grid.models import Search
 from tap_grid.search import execute_search
 from tap_grid.services import get_node
@@ -254,8 +255,7 @@ class SearchSnapshotCollector(CollectorBase):
 
     def _document(self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]]) -> dict[str, Any]:
         title = f"Search snapshots for {self.SOURCE} ({len(nodes)})"
-        return {
-            "metadata": {"grift_version": "0"},
+        document: dict[str, Any] = {
             "_reserved": {},
             "batches": [
                 {
@@ -279,3 +279,7 @@ class SearchSnapshotCollector(CollectorBase):
                 }
             ],
         }
+        # Format "1" header: the spine version and every carried type's version, read from this grid's catalog once
+        # the batch is complete. Core refuses format "0" documents from 0.5.0.
+        document["metadata"] = build_header(document)
+        return document
