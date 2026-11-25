@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from tap_grid.grift.importer import grift_import
+from tap_grid.grift.upgrade import build_header
 from tap_grid.models import Edge
 
 CARRIES = "CARRIES_COMPLIANCE_FINDING__compliance_core"
@@ -27,8 +28,7 @@ def _doc(carrier_key: str = "acme/app#1") -> dict[str, Any]:
     def node(ref: str, entity_type: str, fields: dict[str, Any]) -> dict[str, Any]:
         return {"entity": {"ref": ref, "entity_type": entity_type, "name": fields["name"], "dimensions": {}}, "node": fields}
 
-    return {
-        "metadata": {"grift_version": "0"},
+    document: dict[str, Any] = {
         "_reserved": {},
         "batches": [
             {
@@ -49,6 +49,8 @@ def _doc(carrier_key: str = "acme/app#1") -> dict[str, Any]:
             }
         ],
     }
+    document["metadata"] = build_header(document)
+    return document
 
 
 def test_the_edge_declares_an_identity_with_no_discriminators() -> None:

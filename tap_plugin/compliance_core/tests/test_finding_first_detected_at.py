@@ -16,6 +16,7 @@ import pytest
 import tap_plugin.compliance_core.models as compliance  # noqa: F401 - trigger model registration
 
 from tap_grid.grift import grift_import
+from tap_grid.grift.upgrade import build_header
 from tap_grid.models import Entity
 from tap_grid.registry import get_model_class
 from tap_grid.service_types import WriteOperation
@@ -36,8 +37,7 @@ def _create(payload: dict[str, Any]) -> Any:
 
 
 def _doc(fields: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "metadata": {"grift_version": "0"},
+    document: dict[str, Any] = {
         "_reserved": {},
         "batches": [
             {
@@ -69,6 +69,8 @@ def _doc(fields: dict[str, Any]) -> dict[str, Any]:
             }
         ],
     }
+    document["metadata"] = build_header(document)
+    return document
 
 
 @pytest.mark.django_db

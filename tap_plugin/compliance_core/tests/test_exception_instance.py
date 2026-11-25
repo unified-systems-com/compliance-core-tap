@@ -167,10 +167,10 @@ class TestInstanceNode:
     def test_the_same_key_is_the_same_node(self) -> None:
         """req-compliance-core-exception-instance-4 (through the grid's own resolution of the key)."""
         from tap_grid.grift import grift_import
+        from tap_grid.grift.upgrade import build_header
 
         def doc(outcome: str) -> dict[str, Any]:
-            return {
-                "metadata": {"grift_version": "0"},
+            document: dict[str, Any] = {
                 "_reserved": {},
                 "batches": [
                     {
@@ -186,6 +186,8 @@ class TestInstanceNode:
                     }
                 ],
             }
+            document["metadata"] = build_header(document)
+            return document
 
         for outcome in ("held", "falsified"):
             result = grift_import(doc(outcome))

@@ -32,6 +32,7 @@ import pytest
 from tap_plugin.compliance_core.models import ComplianceFinding
 
 from tap_grid.grift import grift_import
+from tap_grid.grift.upgrade import build_header
 from tap_grid.models import Entity
 from tap_grid.natural_key import Keyless
 from tap_grid.registry import get_model_class, list_entity_types
@@ -72,8 +73,7 @@ def _doc(entity_type: str, fields: dict[str, Any], ref: str = "it") -> dict[str,
     Built here rather than imported from core's own test helpers: this suite also runs
     against a RELEASED core wheel, which ships no test package.
     """
-    return {
-        "metadata": {"grift_version": "0"},
+    document: dict[str, Any] = {
         "_reserved": {},
         "batches": [
             {
@@ -105,6 +105,8 @@ def _doc(entity_type: str, fields: dict[str, Any], ref: str = "it") -> dict[str,
             }
         ],
     }
+    document["metadata"] = build_header(document)
+    return document
 
 
 def _resolved(entity_type: str, fields: dict[str, Any]) -> str:
