@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.16](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.15...v0.8.16) (2026-11-25)
+
+
+### Bug Fixes
+
+* ship the history event-time migration on the tap v0.5.0 floor ([dc62402](https://github.com/unified-systems-com/compliance-core-tap/commit/dc624020c782103fd7008fcee5715a41e8af73d8))
+* ship the history event-time migration on the tap v0.5.0 floor ([37a93ae](https://github.com/unified-systems-com/compliance-core-tap/commit/37a93ae5e06b1a805e6bf920d09b07f36ab0ca40))
+
 ## [0.8.15](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.14...v0.8.15) (2026-11-25)
 
 
