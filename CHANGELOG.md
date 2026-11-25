@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.15](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.14...v0.8.15) (2026-11-25)
+
+
+### Bug Fixes
+
+* **grift:** write the format "1" header from core's build_header in the search snapshot collector ([614a26f](https://github.com/unified-systems-com/compliance-core-tap/commit/614a26f4a7f9c2466f1c403e15429314025b39d5))
+* **grift:** write the format "1" header from core's build_header in the search snapshot collector ([a00fa7f](https://github.com/unified-systems-com/compliance-core-tap/commit/a00fa7f4b95047edcde1656d6d226b78fbf30484))
+
 ## [0.8.14](https://github.com/unified-systems-com/compliance-core-tap/compare/v0.8.13...v0.8.14) (2026-11-24)
 
 
